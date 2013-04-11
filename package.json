@@ -1,0 +1,17 @@
+{
+  "name": "star-bags",
+  "dependencies": {
+    "mongoose": "~3.6.0",
+    "request": "~2.16.6",
+    "express": "3.1.0",
+    "connect-assets": "~2.4.1",
+    "coffee-script": "~1.6.2",
+    "stylus": "~0.32.1",
+    "vow": "~0.3.0",
+    "zombie": "~1.4.1",
+    "jade": "~0.28.2"
+  },
+  "devDependencies": {
+    "grunt": "~0.4.1"
+  }
+}

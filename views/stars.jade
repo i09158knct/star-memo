@@ -1,0 +1,91 @@
+extends layout
+block scripts
+  != js('stars')
+block content
+
+  form#search-star.form-search
+    - var defaultSearchWords = (typeof search_words === 'string') ? search_words : ''
+    .search-scope
+      if typeof scope == 'string' && scope == 'full'
+        label.radio
+          input(type="radio", name="scope", value="tags")
+          | Tags
+        label.radio
+          input(type="radio", name="scope", value="full", checked)
+          | Full
+      else
+        label.radio
+          input(type="radio", name="scope", value="tags", checked)
+          | Tags
+        label.radio
+          input(type="radio", name="scope", value="full")
+          | Full
+
+    input.search-words.input-medium(
+      type="text",
+      name="words",
+      value=defaultSearchWords)
+    button.btn(type="submit") Search
+
+  .stars
+    include includes/pagination
+    each star in stars
+      - var repo = star.repo;
+      - var owner = star.repo.owner;
+      .star(data-memo-id=star.id)
+        h2
+          a(href="https://github.com/#{owner.login}")= owner.login
+          = " / "
+          a(href=repo.html_url, target='_blank')= repo.name
+
+        .homepage
+          a(href=repo.homepage, target='_blank')= repo.homepage
+        quote.description= repo.description
+
+        ul
+          li
+            span.label= repo.watchers
+          li
+            span.label= repo.forks_count
+          li= repo.language
+
+        .memo
+          h4 Memo
+          h5 Tags
+          ul.memo-tags
+            each tagName in star.tags
+              li.memo-tag
+                span.label.label-info= tagName
+          p.memo-body= star.memo
+          button.memo-edit.btn.btn-small Edit
+
+        .memo-editing.hide
+
+
+        .stared_at Starred at #{star.created_at.toISOString()}
+
+        hr
+
+    include includes/pagination
+
+    script#template-tag(type="text/template")
+      li.memo-tag
+        span.label.label-info!= "<%- tagName %>"
+
+
+    script#template-memo-editing(type="txt/template")
+      div
+        h5 Tags
+        ul.memo-editing-tags
+          li.memo-editing-new-tag
+            input(type="text", value="")
+            button.memo-editing-tag-add.btn.btn-small.btn-success Add
+        textarea.memo-editing-body!= "<%= memo %>"
+        button.memo-editing-cancel.btn.btn-small Cancel
+        button.memo-editing-ok.btn.btn-small.btn-primary OK
+
+
+    script#template-tag-editing(type="text/template")
+      li.memo-editing-tag
+        input(type="text", value!="<%- tagName %>")
+        button.memo-editing-tag-remove.btn.btn-small.btn-warning Remove

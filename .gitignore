@@ -1,0 +1,5 @@
+.DS_Store
+tmp/
+components/
+node_modules/
+assets/*/vender
