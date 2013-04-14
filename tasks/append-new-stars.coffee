@@ -1,10 +1,7 @@
-request = require 'request'
-Vow = require 'vow'
-mongoose = require 'mongoose'
-Repo = require '../models/repo'
-Star = require '../models/star'
-
-
+request       = require 'request'
+Vow           = require 'vow'
+Repo          = require '../models/repo'
+Star          = require '../models/star'
 loadAllEvents = require '../lib/load-all-events'
 
 
@@ -68,14 +65,16 @@ saveStar = (event, repoInfo) ->
 
 
 saveStars = (events, repoInfos) ->
+  console.log events,repoInfos
+  return Vow.promise([]) if events.length == 0
   len = events.length
   Vow.all (saveStar events[i], repoInfos[i] for i in [0..(len - 1)])
 
 
 
-appendNewStars = (userName) ->
+appendNewStars = (username) ->
   fetchingLastUpdatedTime = fetchLastUpdatedTime()
-  loadingAllEvents = loadAllEvents userName
+  loadingAllEvents = loadAllEvents username
 
   extractingNewWatchEvents = Vow.all([
     fetchingLastUpdatedTime
@@ -93,18 +92,18 @@ appendNewStars = (userName) ->
 
 module.exports = appendNewStars
 if require.main == module
-  main = (userName) ->
+  username = process.argv[2] || throw 'no user name'
+  do (username) ->
+    mongoose = require 'mongoose'
     mongoose.connect 'localhost', 'tmp'
     db = mongoose.connection
     db.on 'error', console.error.bind console, 'connection error:'
     db.once 'open', ->
-      appending = appendNewStars userName
+      appending = appendNewStars username
       appending.then((result)->
+        console.log result.length
         console.log 'success!'
 
       ).done()
 
       appending.always(-> db.close()).done()
-
-  userName = process.argv[2] || throw 'no user name'
-  main userName

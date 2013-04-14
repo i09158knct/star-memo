@@ -1,9 +1,6 @@
-request = require 'request'
-Vow = require 'vow'
-mongoose = require 'mongoose'
-Event = require '../models/event'
-
-
+request       = require 'request'
+Vow           = require 'vow'
+Event         = require '../models/event'
 loadAllEvents = require '../lib/load-all-received-events'
 
 
@@ -41,9 +38,9 @@ saveEvents = (eventInfos) ->
 
 
 
-appendNewEvents = (userName) ->
+appendNewEvents = (username) ->
   fetchingLastUpdatedTime = fetchLastUpdatedTime()
-  loadingAllEvents = loadAllEvents userName
+  loadingAllEvents = loadAllEvents username
 
   extractingNewEvents = Vow.all([
     fetchingLastUpdatedTime
@@ -56,12 +53,14 @@ appendNewEvents = (userName) ->
 
 module.exports = appendNewEvents
 if require.main == module
-  main = (userName) ->
+  username = process.argv[2] || throw 'no user name'
+  do (username) ->
+    mongoose = require 'mongoose'
     mongoose.connect 'localhost', 'tmp'
     db = mongoose.connection
     db.on 'error', console.error.bind console, 'connection error:'
     db.once 'open', ->
-      appending = appendNewEvents userName
+      appending = appendNewEvents username
       appending.then((savedEvents)->
         console.log savedEvents.length
         console.log 'success!'
@@ -69,6 +68,3 @@ if require.main == module
       ).done()
 
       appending.always(-> db.close()).done()
-
-  userName = process.argv[2] || throw 'no user name'
-  main userName
