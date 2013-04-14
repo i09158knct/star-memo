@@ -26,8 +26,8 @@ app.configure 'development', () ->
 
 
 
-router = require './routes/router'
-router(app)
+stars = require './routes/stars'
+stars(app)
 rpc = require './routes/rpc'
 rpc(app)
 
