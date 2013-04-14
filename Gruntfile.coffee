@@ -1,7 +1,24 @@
 path = require 'path'
 
 module.exports = (grunt) ->
-  grunt.registerTask 'copy-components', () ->
+  grunt.initConfig
+    exec:
+      server: command: [
+        'nodemon server.coffee'
+        '-w models'
+        '-w routes'
+        '-w lib'
+        '-w server.coffee'
+        '-d 0'
+      ].join ' '
+
+
+
+  [
+    'grunt-exec'
+  ].forEach grunt.loadNpmTasks
+
+  grunt.registerTask 'copy-components', ->
     assets =
       'assets/js/vender': [
         'components/bootstrap/docs/assets/js/bootstrap.min.js'
@@ -10,7 +27,7 @@ module.exports = (grunt) ->
         'components/jquery/jquery.js'
         'components/mousetrap/mousetrap.js'
       ]
-      'assets/css': [
+      'assets/css/vender': [
         'components/bootstrap/docs/assets/css/bootstrap.css'
       ]
       'public/img': [
@@ -24,3 +41,16 @@ module.exports = (grunt) ->
         fileName = path.basename source
         grunt.log.writeln "copying #{fileName}"
         grunt.file.copy source, "#{pathName}/#{fileName}"
+
+
+  grunt.registerTask 'init', [
+    'copy-components'
+  ]
+
+  grunt.registerTask 'server', [
+    'exec:server'
+  ]
+
+  grunt.registerTask 'default', [
+    'server'
+  ]
