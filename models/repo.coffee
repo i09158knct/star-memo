@@ -2,7 +2,7 @@ mongoose = require 'mongoose'
 
 
 repoSchema = new mongoose.Schema
-  repo_id: String
+  id: String
   name: String
   owner:
     login: String
@@ -17,8 +17,6 @@ repoSchema = new mongoose.Schema
   created_at: Date
   updated_at: Date
 
-repoSchema.index
-  repo_id: 1
 
 # repoSchema.set 'autoIndex', false
 
