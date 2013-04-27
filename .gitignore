@@ -3,3 +3,4 @@ tmp/
 components/
 node_modules/
 assets/*/vender
+settings.coffee

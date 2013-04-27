@@ -9,7 +9,8 @@
     "stylus": "~0.32.1",
     "vow": "~0.3.0",
     "zombie": "~1.4.1",
-    "jade": "~0.28.2"
+    "jade": "~0.28.2",
+    "gh-loader": "0.0.1"
   },
   "devDependencies": {
     "grunt": "~0.4.1",
