@@ -31,7 +31,6 @@ do ->
 # route setting
 do ->
   require('./routes/stars')(app)
-  require('./routes/rpc')(app)
 
 
 
