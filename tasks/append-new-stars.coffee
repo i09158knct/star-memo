@@ -1,21 +1,18 @@
 request       = require 'request'
-Vow           = require 'vow'
+Q             = require 'q'
 Repo          = require '../models/repo'
 Star          = require '../models/star'
-loadAllEvents = require '../lib/load-all-events'
+loader        = require '../lib/loader'
 
 
 fetchLastUpdatedTime = () ->
-  fetching = Vow.promise()
-
-  Star
+  query = Star
   .findOne({})
   .sort('-created_at')
-  .exec (err, star) -> fetching.sync Vow.invoke ->
-    throw err if err?
-    return star.created_at
 
-  return fetching
+  return Q.ninvoke(query, 'exec').then(
+    (star) -> star.created_at
+  )
 
 
 extractNewWatchEvents = (baseTime, events) ->
@@ -26,24 +23,15 @@ extractNewWatchEvents = (baseTime, events) ->
 
 
 loadRepoInfo = (event) ->
-  loading = Vow.promise()
+  Q.ninvoke(loader, 'loadRepo', event.repo.name)
 
-  url = event.repo.url
-  request url, (err, res, body) -> loading.sync Vow.invoke ->
-    throw err if err?
-    return JSON.parse body
-
-  return loading
-
-
-loadRepoInfos = (events) -> Vow.all (loadRepoInfo event for event in events)
+loadRepoInfos = (events) ->
+  Q.all events.map (event) ->
+    loadRepoInfo event
 
 
 
 saveStar = (event, repoInfo) ->
-  savingRepo = Vow.promise()
-  savingStar = Vow.promise()
-
   repo = new Repo(repoInfo)
   star = new Star
     repo       : repo
@@ -51,59 +39,63 @@ saveStar = (event, repoInfo) ->
     memo       : ''
     created_at : event.created_at
 
+  deferredSavingRepo = Q.defer()
+  deferredSavingStar = Q.defer()
+
   do ->
-    repo.save (err) -> savingRepo.sync Vow.invoke ->
-      throw err if err?
-      return repo
+    deferredSavingRepo.resolve Q.ninvoke(repo, 'save').then(-> repo)
 
-  savingRepo.then ->
-    star.save (err) -> savingStar.sync Vow.invoke ->
-      throw err if err?
-      return star
+  deferredSavingRepo.promise.then ->
+    deferredSavingStar.resolve Q.ninvoke(star, 'save').then(-> star)
 
-  return Vow.all([savingRepo, savingStar])
+  return Q.all([
+    deferredSavingRepo.promise
+    deferredSavingStar.promise
+  ])
 
 
 saveStars = (events, repoInfos) ->
-  console.log events,repoInfos
-  return Vow.promise([]) if events.length == 0
-  len = events.length
-  Vow.all (saveStar events[i], repoInfos[i] for i in [0..(len - 1)])
+  return Q([]) if events.length == 0
+  return Q.all [0..(events.length - 1)].map (i) ->
+    saveStar events[i], repoInfos[i]
 
 
 
-appendNewStars = (username) ->
+appendNewStars = ->
   fetchingLastUpdatedTime = fetchLastUpdatedTime()
-  loadingAllEvents = loadAllEvents username
+  loadingAllEvents = Q.ninvoke(loader, 'loadAllPublicEvents')
 
-  extractingNewWatchEvents = Vow.all([
+  extractingNewWatchEvents = Q.all([
     fetchingLastUpdatedTime
     loadingAllEvents
-  ]).spread extractNewWatchEvents
+  ]).spread(extractNewWatchEvents)
 
-  loadingNewRepoInfos = extractingNewWatchEvents.then loadRepoInfos
+  loadingNewRepoInfos = extractingNewWatchEvents.then(loadRepoInfos)
 
-  return Vow.all([
+  return Q.all([
     extractingNewWatchEvents
     loadingNewRepoInfos
-  ]).spread saveStars
+  ]).spread(saveStars)
 
 
 
 module.exports = appendNewStars
 if require.main == module
-  username = process.argv[2] || throw 'no user name'
-  do (username) ->
-    mongoose = require 'mongoose'
-    mongoose.connect 'localhost', 'tmp'
-    db = mongoose.connection
-    db.on 'error', console.error.bind console, 'connection error:'
-    db.once 'open', ->
-      appending = appendNewStars username
-      appending.then((result)->
+  settings = require '../settings'
+  mongoose = require 'mongoose'
+
+  mongoose.connect settings.dbhost, settings.dbname
+  db = mongoose.connection
+  db.on 'error', console.error.bind console, 'connection error:'
+
+  db.once 'open', ->
+    appendNewStars().done(
+      (result) ->
+        db.close()
         console.log result.length
         console.log 'success!'
-
-      ).done()
-
-      appending.always(-> db.close()).done()
+    ,
+      (reason) ->
+        db.close()
+        throw reason
+    )
