@@ -1,4 +1,4 @@
-Vow     = require 'Vow'
+Vow     = require 'vow'
 Browser = require 'zombie'
 
 
