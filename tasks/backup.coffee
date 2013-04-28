@@ -1,31 +1,31 @@
-Vow = require 'vow'
-mongoose = require 'mongoose'
+Q = require 'q'
 Repo = require '../models/repo'
 Star = require '../models/star'
 
 
 fetchAllStars = ->
-  fetching = Vow.promise()
-
-  Star
+  query = Star
   .find({})
   .populate('repo')
-  .exec (err, stars) -> fetching.sync Vow.invoke ->
-    throw err if err?
-    return stars
 
-  return fetching
+  return Q.ninvoke(query, 'exec')
 
 
 if require.main == module
-  mongoose.connect 'localhost', 'tmp'
+  settings = require '../settings'
+  mongoose = require 'mongoose'
+
+  mongoose.connect settings.dbhost, settings.dbname
   db = mongoose.connection
   db.on 'error', console.error.bind console, 'connection error:'
+
   db.once 'open', ->
-    fetching = fetchAllStars()
-
-    fetching.then((stars) ->
-      console.log JSON.stringify stars, null, '\t'
-    ).done()
-
-    fetching.always(-> db.close())
+    fetchAllStars().done(
+      (stars) ->
+        db.close()
+        console.log JSON.stringify stars, null, '\t'
+    ,
+      (reason) ->
+        db.close()
+        throw reason
+    )
