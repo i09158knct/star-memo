@@ -1,20 +1,17 @@
 request       = require 'request'
-Vow           = require 'vow'
+Q             = require 'q'
 Event         = require '../models/event'
-loadAllEvents = require '../lib/load-all-received-events'
+loader        = require '../lib/loader'
 
 
 fetchLastUpdatedTime = () ->
-  fetching = Vow.promise()
-
-  Event
+  query = Event
   .findOne({})
   .sort('-created_at')
-  .exec (err, event={}) -> fetching.sync Vow.invoke ->
-    throw err if err?
-    return event.created_at || new Date(0)
 
-  return fetching
+  return Q.ninvoke(query, 'exec').then(
+    (event={}) -> event.created_at || new Date(0)
+  )
 
 
 extractNewEvents = (baseTime, events) ->
@@ -23,48 +20,46 @@ extractNewEvents = (baseTime, events) ->
 
 
 saveEvent = (eventInfo) ->
-  saving = Vow.promise()
-
   event = new Event(eventInfo)
-  event.save (err) -> saving.sync Vow.invoke ->
-    throw err if err?
-    return event
-
-  return saving
+  return Q.ninvoke(event, 'save').then(-> event)
 
 
 saveEvents = (eventInfos) ->
-  Vow.all (saveEvent eventInfo for eventInfo in eventInfos)
+  return Q([]) if eventInfos.length == 0
+  return Q.all eventInfos.map (eventInfo) -> saveEvent eventInfo
 
 
 
-appendNewEvents = (username) ->
+appendNewEvents = ->
   fetchingLastUpdatedTime = fetchLastUpdatedTime()
-  loadingAllEvents = loadAllEvents username
+  loadingAllEvents = Q.ninvoke(loader, 'loadAllReceivedEvents')
 
-  extractingNewEvents = Vow.all([
+  extractingNewEvents = Q.all([
     fetchingLastUpdatedTime
     loadingAllEvents
-  ]).spread extractNewEvents
+  ]).spread(extractNewEvents)
 
-  return extractingNewEvents.then saveEvents
+  return extractingNewEvents.then(saveEvents)
 
 
 
 module.exports = appendNewEvents
 if require.main == module
-  username = process.argv[2] || throw 'no user name'
-  do (username) ->
-    mongoose = require 'mongoose'
-    mongoose.connect 'localhost', 'tmp'
-    db = mongoose.connection
-    db.on 'error', console.error.bind console, 'connection error:'
-    db.once 'open', ->
-      appending = appendNewEvents username
-      appending.then((savedEvents)->
-        console.log savedEvents.length
+  settings = require '../settings'
+  mongoose = require 'mongoose'
+
+  mongoose.connect settings.dbhost, settings.dbname
+  db = mongoose.connection
+  db.on 'error', console.error.bind console, 'connection error:'
+
+  db.once 'open', ->
+    appendNewEvents().done(
+      (results) ->
+        db.close()
+        console.log results.length
         console.log 'success!'
-
-      ).done()
-
-      appending.always(-> db.close()).done()
+    ,
+      (reason) ->
+        db.close()
+        throw reason
+    )
