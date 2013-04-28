@@ -11,7 +11,7 @@ fetchLastUpdatedTime = () ->
   .sort('-created_at')
 
   return Q.ninvoke(query, 'exec').then(
-    (star) -> star.created_at
+    (star={}) -> star.created_at || new Date(0)
   )
 
 
@@ -90,9 +90,9 @@ if require.main == module
 
   db.once 'open', ->
     appendNewStars().done(
-      (result) ->
+      (results) ->
         db.close()
-        console.log result.length
+        console.log results.length
         console.log 'success!'
     ,
       (reason) ->
