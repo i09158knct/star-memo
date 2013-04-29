@@ -1,63 +1,64 @@
-request = require 'request'
-Vow = require 'vow'
-mongoose = require 'mongoose'
-Repo = require '../models/repo'
-Star = require '../models/star'
+Q      = require 'q'
+Repo   = require '../models/repo'
+Star   = require '../models/star'
+loader = require '../lib/loader'
 
 
 fetchAllStars = ->
-  fetching = Vow.promise()
+  query = Star
+    .find({})
+    .populate('repo')
 
-  Star
-  .find({})
-  .populate('repo')
-  .exec (err, stars) -> fetching.sync Vow.invoke ->
-    throw err if err?
-    return stars
+  return Q.ninvoke(query, 'exec')
 
-  return fetching
-
-getUrl = (star) ->
-  base = 'https://api.github.com/repos'
-  "#{base}/#{star.repo.owner.login}/#{star.repo.name}" + '?client_id=1d7b414dfb52fac9a5b6&client_secret=763ef47953564a5a9638eeec89d86794cc5deb41'
 
 updateStar = (star) ->
-  loading = Vow.promise()
-  request (getUrl star), (err, res, body) -> loading.sync Vow.invoke ->
-    if err?
-      throw err
-    if res.statusCode != 200
-      throw new Error [res.statusCode, body]
-
-    return JSON.parse body
-
-  updating = Vow.promise()
-  loading.then((repoInfo) ->
-    star.repo.id = repoInfo.id
-    star.repo.updated_at = repoInfo.updated_at
-    star.repo.description = repoInfo.description
-    star.repo.homepage = repoInfo.homepage
-    star.repo.forks_count = repoInfo.forks_count
-    star.repo.watchers = repoInfo.watchers
-
-    star.repo.save (err) -> updating.sync Vow.invoke ->
-      throw err if err?
-      return
+  fullname = "#{star.repo.owner.login}/#{star.repo.name}"
+  loading = Q.ninvoke(loader, 'loadRepo', fullname)
+  loading.then(
+    (repoInfo) ->
+      repo = star.repo
+      repo.id = repoInfo.id
+      repo.updated_at = repoInfo.updated_at
+      repo.description = repoInfo.description
+      repo.homepage = repoInfo.homepage
+      repo.html_url = repoInfo.html_url
+      repo.language = repoInfo.language
+      repo.forks_count = repoInfo.forks_count
+      repo.watchers = repoInfo.watchers
+      return Q.ninvoke(repo, 'save')
   )
 
-  return updating
+
+# Deferred loading
+updateAllStars = (stars) ->
+  onFailed = (reason) ->
+    console.error "- #{star.repo.name}: Communication error!"
+    console.error "  ", reason
+
+  Q.all stars.map (star, i) ->
+    deferred = Q.defer()
+    setTimeout ->
+      deferred.resolve(updateStar(star).fail(onFailed))
+    , (i / 10)
+    return deferred.promise
+
 
 if require.main == module
-  mongoose.connect 'localhost', 'tmp'
+  settings = require '../settings'
+  mongoose = require 'mongoose'
+
+  mongoose.connect settings.dbhost, settings.dbname
   db = mongoose.connection
   db.on 'error', console.error.bind console, 'connection error:'
+
   db.once 'open', ->
-    fetchAllStars().then((stars) ->
-      Vow.all (updateStar star for star in stars)
-    ).then(->
-      console.log 'success'
-      db.close()
-    , (reason) ->
-      db.close()
-      throw reason
-    ).done()
+    fetchAllStars().then(updateAllStars).then(
+      (result) ->
+        db.close()
+        console.log 'success!'
+    ,
+      (reason) ->
+        db.close()
+        throw reason
+    )
