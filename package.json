@@ -10,7 +10,7 @@
     "vow": "~0.3.0",
     "zombie": "~1.4.1",
     "jade": "~0.28.2",
-    "gh-loader": "0.0.2",
+    "gh-loader": "0.0.3",
     "q": "~0.9.3"
   },
   "devDependencies": {
