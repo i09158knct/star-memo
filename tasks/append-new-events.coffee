@@ -6,8 +6,8 @@ loader        = require '../lib/loader'
 
 fetchLastUpdatedTime = () ->
   query = Event
-  .findOne({})
-  .sort('-created_at')
+    .findOne({})
+    .sort('-created_at')
 
   return Q.ninvoke(query, 'exec').then(
     (event={}) -> event.created_at || new Date(0)
