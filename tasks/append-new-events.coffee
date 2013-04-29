@@ -1,4 +1,3 @@
-request       = require 'request'
 Q             = require 'q'
 Event         = require '../models/event'
 loader        = require '../lib/loader'
