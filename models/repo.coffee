@@ -13,6 +13,9 @@ repoSchema = new mongoose.Schema
 
   watchers: Number
   forks_count: Number
+  previous:
+    watchers: Number
+    forks_count: Number
   language: String
   created_at: Date
   updated_at: Date

@@ -18,6 +18,10 @@ updateStar = (star) ->
   loading.then(
     (repoInfo) ->
       repo = star.repo
+
+      repo.previous.forks_count = repo.forks_count
+      repo.previous.watchers = repo.watchers
+
       repo.id = repoInfo.id
       repo.updated_at = repoInfo.updated_at
       repo.description = repoInfo.description
