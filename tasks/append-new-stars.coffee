@@ -4,15 +4,6 @@ Star          = require '../models/star'
 loader        = require '../lib/loader'
 
 
-fetchLastUpdatedTime = () ->
-  query = Star
-    .findOne({})
-    .sort('-created_at')
-
-  return Q.ninvoke(query, 'exec').then(
-    (star={}) -> star.created_at || new Date(0)
-  )
-
 
 extractNewWatchEvents = (baseTime, events) ->
   isWatchEvent = (event) -> (event.type == 'WatchEvent')
@@ -61,7 +52,7 @@ saveStars = (events, repoInfos) ->
 
 
 appendNewStars = ->
-  fetchingLastUpdatedTime = fetchLastUpdatedTime()
+  fetchingLastUpdatedTime = Q.ninvoke Star, 'fetchLastUpdatedTime'
   loadingAllEvents = Q.ninvoke(loader, 'loadAllPublicEvents')
 
   extractingNewWatchEvents = Q.all([

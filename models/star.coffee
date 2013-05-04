@@ -13,6 +13,14 @@ starSchema = new mongoose.Schema
   created_at:
     type: Date
 
+starSchema.statics.fetchLastUpdatedTime = (cb) ->
+  @
+  .findOne({})
+  .sort('-created_at')
+  .exec (err, star) ->
+    cb? err, star?.created_at || new Date(0)
+
+
 # starSchema.index
 
 # starSchema.set 'autoIndex', false
