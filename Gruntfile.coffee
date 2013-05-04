@@ -2,6 +2,18 @@ path = require 'path'
 
 module.exports = (grunt) ->
   grunt.initConfig
+    regarde:
+      livereload:
+        files: [
+          'public/**/*'
+          'assets/**/*'
+          'views/**/*'
+        ]
+        tasks: ['livereload']
+
+    livereload:
+      port: 35729
+
     exec:
       server: command: [
         'nodemon server.coffee'
@@ -10,12 +22,15 @@ module.exports = (grunt) ->
         '-w lib'
         '-w server.coffee'
         '-d 0'
+        '&'
       ].join ' '
 
 
 
   [
     'grunt-exec'
+    'grunt-regarde'
+    'grunt-contrib-livereload'
   ].forEach grunt.loadNpmTasks
 
   grunt.registerTask 'copy-components', ->
@@ -52,5 +67,7 @@ module.exports = (grunt) ->
   ]
 
   grunt.registerTask 'default', [
+    'livereload-start'
     'server'
+    'regarde'
   ]
