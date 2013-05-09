@@ -2,8 +2,9 @@ express  = require 'express'
 http     = require 'http'
 path     = require 'path'
 mongoose = require 'mongoose'
+settings = require './settings'
 
-mongoose.connect 'localhost', 'tmp'
+mongoose.connect settings.dbhost, settings.dbname
 app = express()
 
 
