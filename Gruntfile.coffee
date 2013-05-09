@@ -34,15 +34,17 @@ module.exports = (grunt) ->
 
 
     exec:
-      server: command: [
+      base_command: [
         'nodemon server.coffee'
         '-w models'
         '-w routes'
         '-w lib'
         '-w server.coffee'
         '-d 0'
-        '&'
       ].join ' '
+
+      server: command: '<%= exec.base_command %>'
+      server_background: command: '<%= exec.base_command %> &'
 
 
 
@@ -88,7 +90,7 @@ module.exports = (grunt) ->
     'test': ['simplemocha']
     'default': [
       'livereload-start'
-      'server'
+      'exec:server_background'
       'regarde'
     ]
   }
