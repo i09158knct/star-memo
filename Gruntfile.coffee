@@ -11,8 +11,27 @@ module.exports = (grunt) ->
         ]
         tasks: ['livereload']
 
+      test:
+        files: [
+          'models/**/*'
+          'routes/**/*'
+          'tasks/**/*'
+          'test/**/*'
+          'server.coffee'
+        ]
+        tasks: ['test']
+
+
+    simplemocha:
+      options:
+        reporter: 'spec'
+        compilers: ['coffee:coffee-script']
+      all: ['test/**/*.coffee']
+
+
     livereload:
       port: 35729
+
 
     exec:
       server: command: [
@@ -27,14 +46,24 @@ module.exports = (grunt) ->
 
 
 
-  [
+  grunt.loadNpmTasks task for task in [
     'grunt-exec'
+    'grunt-simple-mocha'
     'grunt-regarde'
     'grunt-contrib-livereload'
-  ].forEach grunt.loadNpmTasks
+  ]
+
+
 
   grunt.registerTask 'copy-components', ->
-    assets =
+    (
+      grunt.file.mkdir pathName
+      for source in sources
+        fileName = path.basename source
+        grunt.log.writeln "copying #{fileName}"
+        grunt.file.copy source, "#{pathName}/#{fileName}"
+
+    ) for pathName, sources of {
       'assets/js/vender': [
         'components/bootstrap/docs/assets/js/bootstrap.min.js'
         'components/backbone/backbone.js'
@@ -49,25 +78,18 @@ module.exports = (grunt) ->
         'components/bootstrap/docs/assets/img/glyphicons-halflings.png'
         'components/bootstrap/docs/assets/img/glyphicons-halflings-white.png'
       ]
-
-    for pathName, sources of assets
-      grunt.file.mkdir pathName
-      for source in sources
-        fileName = path.basename source
-        grunt.log.writeln "copying #{fileName}"
-        grunt.file.copy source, "#{pathName}/#{fileName}"
+    }
 
 
-  grunt.registerTask 'init', [
-    'copy-components'
-  ]
 
-  grunt.registerTask 'server', [
-    'exec:server'
-  ]
+  grunt.registerTask name, targets for name, targets of {
+    'initialize': ['copy-components']
+    'server': ['exec:server']
+    'test': ['simplemocha']
+    'default': [
+      'livereload-start'
+      'server'
+      'regarde'
+    ]
+  }
 
-  grunt.registerTask 'default', [
-    'livereload-start'
-    'server'
-    'regarde'
-  ]
