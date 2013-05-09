@@ -4,22 +4,15 @@ block scripts
 block content
 
   form#search-star.form-search
-    - var defaultSearchWords = (typeof search_words === 'string') ? search_words : ''
+    - var defaultSearchWords = (typeof search_words === 'string') ? search_words : '';
     .search-scope
-      if typeof scope == 'string' && scope == 'full'
-        label.radio
-          input(type="radio", name="scope", value="tags")
-          | Tags
-        label.radio
-          input(type="radio", name="scope", value="full", checked)
-          | Full
-      else
-        label.radio
-          input(type="radio", name="scope", value="tags", checked)
-          | Tags
-        label.radio
-          input(type="radio", name="scope", value="full")
-          | Full
+      - var fullIsChecked = typeof scope == 'string' && scope == 'full';
+      label.radio
+        input(type="radio", name="scope", value="tags", checked=!fullIsChecked)
+        | Tags
+      label.radio
+        input(type="radio", name="scope", value="full", checked=fullIsChecked)
+        | Full
 
     input.search-words.input-medium(
       type="text",
