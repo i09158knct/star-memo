@@ -1,7 +1,7 @@
 path = require 'path'
 mongoose = require 'mongoose'
-Repo = require '../models/repo'
-Star = require '../models/star'
+Repo = mongoose.model 'Repo'
+Star = mongoose.model 'Star'
 
 module.exports = (app) ->
   app.get '/', (req, res) ->

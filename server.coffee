@@ -4,6 +4,10 @@ path     = require 'path'
 mongoose = require 'mongoose'
 settings = require './settings'
 
+require './models/event'
+require './models/repo'
+require './models/star'
+
 mongoose.connect settings.dbhost, settings.dbname
 app = express()
 
