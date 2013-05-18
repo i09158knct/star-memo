@@ -1,6 +1,6 @@
-Q             = require 'q'
-Event         = require '../models/event'
-loader        = require '../lib/loader'
+Q      = require 'q'
+Event  = require '../models/event'
+loader = require '../lib/loader'
 
 
 fetchLastUpdatedTime = () ->

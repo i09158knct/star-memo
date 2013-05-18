@@ -1,4 +1,4 @@
-Q = require 'q'
+Q    = require 'q'
 Repo = require '../models/repo'
 Star = require '../models/star'
 

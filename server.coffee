@@ -33,13 +33,13 @@ do ->
 
 
 
-# route setting
+# Route setting
 do ->
   require('./routes/stars')(app)
 
 
 
-# server starting
+# Server starting
 do ->
   port = app.get 'port'
   http.createServer(app).listen port, ->

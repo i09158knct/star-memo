@@ -1,7 +1,7 @@
-Q             = require 'q'
-Repo          = require '../models/repo'
-Star          = require '../models/star'
-loader        = require '../lib/loader'
+Q      = require 'q'
+Repo   = require '../models/repo'
+Star   = require '../models/star'
+loader = require '../lib/loader'
 
 
 
