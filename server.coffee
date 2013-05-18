@@ -35,7 +35,7 @@ do ->
 
 # Route setting
 do ->
-  require('./routes/stars')(app)
+  require('./controllers/stars')(app)
 
 
 

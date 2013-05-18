@@ -13,8 +13,8 @@ module.exports = (grunt) ->
 
       test:
         files: [
+          'controllers/**/*'
           'models/**/*'
-          'routes/**/*'
           'tasks/**/*'
           'test/**/*'
           'server.coffee'
@@ -36,8 +36,8 @@ module.exports = (grunt) ->
     exec:
       base_command: [
         'nodemon server.coffee'
+        '-w controllers'
         '-w models'
-        '-w routes'
         '-w lib'
         '-w server.coffee'
         '-d 0'
