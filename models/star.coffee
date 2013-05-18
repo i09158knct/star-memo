@@ -37,6 +37,24 @@ starSchema.statics.saveRepoAndStar = (repoInfo, starInfo={}, cb=->) ->
   Q.ninvoke(repo, 'save').then(-> Q.ninvoke(star, 'save'))
   .nodeify(cb)
 
+starSchema.statics.findWithPaginate = (target, page, limit) ->
+  @
+  .find(target)
+  .populate('repo')
+  .sort('-created_at')
+  .skip((page - 1) * limit)
+  .limit(limit)
+
+starSchema.statics.update = (_id, attr, cb=->) ->
+  Q.ninvoke(@.findOne({_id}), 'exec').then(
+    (star) ->
+      star.tags = attr.tags
+      star.memo = attr.memo
+      Q.ninvoke(star, 'save')
+
+  ).nodeify(cb)
+
+
 
 module.exports = mongoose.model 'Star', starSchema
 
