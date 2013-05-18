@@ -1,3 +1,4 @@
+Q        = require 'q'
 mongoose = require 'mongoose'
 
 Repo = require './repo'
@@ -25,30 +26,16 @@ starSchema.statics.fetchLastUpdatedTime = (cb) ->
 
 # starSchema.set 'autoIndex', false
 
-###
-starSchema.statics.saveRepoAndStar = (repoInfo, starInfo={}) ->
-  savingRepo = Vow.promise()
-  savingStar = Vow.promise()
-
+starSchema.statics.saveRepoAndStar = (repoInfo, starInfo={}, cb=->) ->
   repo = new Repo(repoInfo)
-  star = new Star
+  star = new @
     repo       : repo
     tags       : starInfo.tags || [repo.language]
     memo       : starInfo.memo || ''
-    created_at : starInfo.time || new Date
+    created_at : starInfo.created_at || new Date
 
-  do ->
-    repo.save (err) -> savingRepo.sync Vow.invoke ->
-      throw err if err?
-      return repo
-
-  savingRepo.then ->
-    star.save (err) -> savingStar.sync Vow.invoke ->
-      throw err if err?
-      return star
-
-  return Vow.all([savingRepo, savingStar])
-###
+  Q.ninvoke(repo, 'save').then(-> Q.ninvoke(star, 'save'))
+  .nodeify(cb)
 
 
 module.exports = mongoose.model 'Star', starSchema

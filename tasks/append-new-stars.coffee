@@ -6,9 +6,13 @@ loader        = require '../lib/loader'
 
 
 extractNewWatchEvents = (baseTime, events) ->
-  isWatchEvent = (event) -> (event.type == 'WatchEvent')
-  isNewer = (event) -> (new Date(event.created_at) > baseTime)
-  events.filter (event) -> (isWatchEvent(event) && isNewer(event))
+  isWatchEvent = (event) ->
+    (event.type == 'WatchEvent')
+  isNewer = (event) ->
+    (new Date(event.created_at) > baseTime)
+
+  events.filter (event) ->
+    (isWatchEvent(event) && isNewer(event))
 
 
 
@@ -22,32 +26,18 @@ loadRepoInfos = (events) ->
 
 
 saveStar = (event, repoInfo) ->
-  repo = new Repo(repoInfo)
-  star = new Star
-    repo       : repo
-    tags       : [repo.language]
-    memo       : ''
-    created_at : event.created_at
-
-  deferredSavingRepo = Q.defer()
-  deferredSavingStar = Q.defer()
-
-  do ->
-    deferredSavingRepo.resolve Q.ninvoke(repo, 'save').then(-> repo)
-
-  deferredSavingRepo.promise.then ->
-    deferredSavingStar.resolve Q.ninvoke(star, 'save').then(-> star)
-
-  return Q.all([
-    deferredSavingRepo.promise
-    deferredSavingStar.promise
-  ])
+  Q.ninvoke(Star, 'saveRepoAndStar',
+    repoInfo,
+    {created_at : event.created_at}
+  )
 
 
 saveStars = (events, repoInfos) ->
-  return Q([]) if events.length == 0
-  return Q.all [0..(events.length - 1)].map (i) ->
-    saveStar events[i], repoInfos[i]
+  if events.length == 0
+    Q([])
+  else
+    Q.all [0..(events.length - 1)].map (i) ->
+      saveStar events[i], repoInfos[i]
 
 
 
