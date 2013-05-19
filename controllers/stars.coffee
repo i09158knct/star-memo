@@ -88,17 +88,15 @@ module.exports = (app) ->
         ]
 
     deferredResolving.promise.then(
-      (target) ->
-        fetchTargetAndCount(target, page, limit).spread(
-          (stars=[], count) ->
-            res.render 'stars',
-              stars       : stars
-              page        : page
-              limit       : limit
-              count       : count
-              scope       : scope
-              search_words: req.params.words
-        )
+      (target) -> fetchTargetAndCount(target, page, limit)
+    ).spread(
+      (stars=[], count) -> res.render 'stars',
+        stars       : stars
+        page        : page
+        limit       : limit
+        count       : count
+        scope       : scope
+        search_words: req.params.words
 
     ).fail(makeOnFailHandler(res)).done()
 
