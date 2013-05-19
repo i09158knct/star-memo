@@ -20,10 +20,6 @@ makeOnFailHandler = (res) ->
 
 
 module.exports = (app) ->
-  app.get '/', (req, res) ->
-    res.render 'index'
-
-
   app.put '/stars/:starId.json', (req, res) ->
     _id = req.params.starId
 

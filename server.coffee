@@ -35,6 +35,7 @@ do ->
 
 # Route setting
 do ->
+  require('./controllers/home')(app)
   require('./controllers/stars')(app)
 
 
