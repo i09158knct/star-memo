@@ -3,16 +3,6 @@ Event  = require '../models/event'
 loader = require '../lib/loader'
 
 
-fetchLastUpdatedTime = () ->
-  query = Event
-    .findOne({})
-    .sort('-created_at')
-
-  return Q.ninvoke(query, 'exec').then(
-    (event={}) -> event.created_at || new Date(0)
-  )
-
-
 extractNewEvents = (baseTime, events) ->
   isNewer = (event) -> (new Date(event.created_at) > baseTime)
   events.filter (event) -> (isNewer event)
@@ -30,7 +20,7 @@ saveEvents = (eventInfos) ->
 
 
 appendNewEvents = ->
-  fetchingLastUpdatedTime = fetchLastUpdatedTime()
+  fetchingLastUpdatedTime = Q.ninvoke(Event, 'fetchLastUpdatedTime')
   loadingAllEvents = Q.ninvoke(loader, 'loadAllReceivedEvents')
 
   extractingNewEvents = Q.all([

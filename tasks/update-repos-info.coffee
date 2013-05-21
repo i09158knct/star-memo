@@ -37,14 +37,14 @@ updateStar = (star) ->
 # Deferred loading
 updateAllStars = (stars) ->
   Q.all stars.map (star, i) ->
-    onFailed = (star) -> (reason) ->
+    onFailed = (reason) ->
       console.error "- #{star.repo.name}: Communication error!"
       console.error "  ", reason
 
     deferred = Q.defer()
     setTimeout ->
       deferred.resolve(updateStar(star).fail(onFailed))
-    , (i / 10)
+    , (i * 1000)
     return deferred.promise
 
 

@@ -20,8 +20,12 @@ loadRepoInfo = (event) ->
   Q.ninvoke(loader, 'loadRepo', event.repo.name)
 
 loadRepoInfos = (events) ->
-  Q.all events.map (event) ->
-    loadRepoInfo event
+  Q.all events.map (event, i) ->
+    deferred = Q.defer()
+    setTimeout ->
+      deferred.resolve loadRepoInfo event
+    , (i * 1000)
+    return deferred.promise
 
 
 
